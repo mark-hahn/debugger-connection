@@ -4,8 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "istanbul cover node_modules/.bin/_mocha"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "debug": "^0.7.4",
+    "should": "^3.1.4",
+    "mocha": "^1.18.2",
+    "sinon": "^1.9.0"
+  }
 }
