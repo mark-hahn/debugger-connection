@@ -20,28 +20,19 @@ describe('Client', function() {
   describe('#version', function() {
     it('should send the request to debug server for version', function() {
 
+      sinon.stub(client.protocol, 'version')
       client.version(function() {})
-      connection.write.calledWith(
-        'Content-Length: ' +
-        Buffer.byteLength('{"seq":1,"type":"request","command":"version"}', 'utf8') +
-        '\r\n\r\n' +
-        '{"seq":1,"type":"request","command":"version"}'
-      ).should.be.true
-
+      client.protocol.version.calledWith(1).should.be.true
+      connection.write.called.should.be.true
     })
 
     it('should send the request to debug server for version twice', function() {
-
+      sinon.stub(client.protocol, 'version')
       client.version(function() {})
       client.version(function() {})
 
-      connection.write.calledWith(
-        'Content-Length: ' +
-        Buffer.byteLength('{"seq":2,"type":"request","command":"version"}', 'utf8') +
-        '\r\n\r\n' +
-        '{"seq":2,"type":"request","command":"version"}'
-      ).should.be.true
-
+      client.protocol.version.calledWith(2).should.be.true
+      connection.write.called.should.be.true
     })
 
     it('should be able to retrieve the version and call the callback', function() {
@@ -76,5 +67,86 @@ describe('Client', function() {
 
     })
   })
+
+  describe('#continue', function() {
+
+    var protocol;
+    // client.continue()
+    // client.continue.in()
+    // client.continue.out()
+    // client.continue.next(5)
+    beforeEach(function() {
+      protocol = client.protocol
+      sinon.stub(protocol, 'continue')
+    })
+
+    afterEach(function() {
+      protocol.continue.restore()
+    })
+
+    it('should send a normal continue request to debugger', function() {
+      client.continue()
+      protocol.continue.called.should.be.true
+    })
+
+    it('should send a out continue request with step to debugger', function() {
+      client.continue.out(10)
+      protocol.continue.calledWith(1, 'out', 10).should.be.true
+    })
+
+    it('should send a next continue request to debugger', function() {
+      client.continue.next()
+      protocol.continue.calledWith(1, 'next').should.be.true
+    })
+  })
+
+  // TODO finish others then start with this
+  describe('#source', function() {
+
+    var protoStr = '{"request_seq": 1}'
+      , sourceStub
+
+    beforeEach(function() {
+      sourceStub = sinon.stub(client.protocol, 'source')
+      sourceStub.returns(protoStr)
+    })
+
+    it('should get the source protocol once', function() {
+
+      client.source(1, 10, 20, function() {})
+      client.protocol.source.calledWith(1, 1, 10, 20).should.be.true
+
+    })
+
+    it('should get the source protocol twice', function() {
+
+      client.source(20, 10, 100, function() {})
+      client.source(400, 10, 10000, function() {})
+      client.protocol.source.calledWith(2, 400, 10, 10000).should.be.true
+
+    })
+
+    it('should send the source protocol string to debugger', function() {
+
+      client.source(function() {})
+      connection.write.calledWith(protoStr).should.be.true
+
+    })
+
+    it('should pass error to callback when no source', function(done) {
+
+      client.source(10, 10, 10, function(err) {
+        err.should.be.an.Error
+        done()
+      })
+
+      connection.emit('data', new Buffer(
+        '{"seq":6,"request_seq":1,"type":"response","command":"source","success":false,"message":"No source","running":true}',
+        'utf8'
+      ))
+    })
+
+  })
+
 
 })
