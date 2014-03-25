@@ -98,12 +98,33 @@ describe('Client', function() {
       client.continue.next()
       protocol.continue.calledWith(1, 'next').should.be.true
     })
+
+    it('should provide the success result to handler', function() {
+      client.continue(cb)
+      connection.emit('data',
+        JSON.stringify({
+          seq         : 1,
+          type        : 'response',
+          request_seq : 1,
+          command     : 'continue',
+          running     : true,
+          success     : true
+        })
+      )
+
+      cb.called.should.be.true
+    })
+
+    it('should send the in next step without step', function() {
+      client.continue.next(cb)
+      protocol.continue.calledWith(1, 'next').should.be.true
+    })
   })
 
   // TODO finish others then start with this
   describe('#source', function() {
 
-    var protoStr = '{"request_seq": 1}'
+    var protoStr = '{request_seq": 1}'
       , sourceStub
 
     beforeEach(function() {
