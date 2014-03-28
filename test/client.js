@@ -121,6 +121,14 @@ describe('Client', function() {
     })
   })
 
+  describe('#break event', function() {
+    it('should publish a break event data came', function() {
+      client.on('break', cb)
+      connection.emit('data', '{"seq":1,"type":"event","event":"break"}')
+      cb.called.should.be.true
+    })
+  })
+
   // TODO finish others then start with this
   describe('#source', function() {
 
