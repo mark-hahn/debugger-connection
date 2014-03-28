@@ -1,13 +1,17 @@
 {
   "name": "v8-debug-protocol",
   "version": "0.0.0",
-  "description": "",
+  "description": "v8 protocol client",
   "main": "index.js",
   "scripts": {
     "test": "istanbul cover node_modules/.bin/_mocha"
   },
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kiddkai/v8-debug-protocol"
+  },
+  "author": "kiddkai",
+  "license": "MIT",
   "devDependencies": {
     "debug": "^0.7.4",
     "should": "^3.1.4",
