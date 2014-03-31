@@ -1,7 +1,8 @@
 
 var sinon = require('sinon')
+  , rewire = require('rewire')
   , Ev = require('events').EventEmitter
-  , Client = require('../lib/client')
+  , Client = rewire('../lib/client')
   , noop = function() {}
 
 describe('Client', function() {
@@ -9,12 +10,38 @@ describe('Client', function() {
   var connection
     , client
     , cb
+    , port = 5858
+    , connectionStub
 
   beforeEach(function() {
     connection = new Ev()
     connection.write = sinon.stub()
-    client = new Client(connection)
+    connectionStub = sinon.stub()
+    connectionStub.returns(connection)
+    Client.__set__('net', {
+      connect: connectionStub
+    })
+    client = new Client(port)
     cb = sinon.stub()
+  })
+
+  describe('when client created', function() {
+
+    it('should connect to the port I wanted', function() {
+      connectionStub.calledWith({ port: 5858 }).should.be.true
+    })
+
+    it('should emit connect event when client is already access to debugger', function() {
+      client.on('connect', cb)
+      client.connection.emit('connect')
+      cb.called.should.be.true
+    })
+
+    it('should emit error when connection have error', function() {
+      client.on('error', cb)
+      client.connection.emit('error', 'this is an error')
+      cb.calledWith('this is an error').should.be.true
+    })
   })
 
   describe('#version', function() {
@@ -71,10 +98,7 @@ describe('Client', function() {
   describe('#continue', function() {
 
     var protocol;
-    // client.continue()
-    // client.continue.in()
-    // client.continue.out()
-    // client.continue.next(5)
+
     beforeEach(function() {
       protocol = client.protocol
       sinon.stub(protocol, 'continue')
