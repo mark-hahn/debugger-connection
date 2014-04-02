@@ -25,6 +25,13 @@ describe('Client', function() {
     cb = sinon.stub()
   })
 
+  describe('when using client as a normal function', function() {
+    it('should create a new client instance', function() {
+      var client = Client(port)
+      client.should.be.instanceOf(Client)
+    })
+  })
+
   describe('when client created', function() {
 
     it('should connect to the port I wanted', function() {
