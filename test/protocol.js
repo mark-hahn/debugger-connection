@@ -134,28 +134,6 @@ describe('protocol', function() {
     })
   })
 
-  describe('#source', function() {
-    it('should generate the source request protocol', function() {
-      var seq = 2
-        , json = {
-            seq: 2,
-            type: 'request',
-            command: 'source',
-            arguments: {
-              frame: 0,
-              fromLine: 10,
-              toLine: 20
-            }
-          }
-        , serilizeMock = sinon.stub(proto, 'serilize')
-
-      proto.source(seq, 0, 10, 20)
-      serilizeMock.calledWith(json).should.be.true
-      serilizeMock.restore()
-    })
-
-  })
-
 
 
 

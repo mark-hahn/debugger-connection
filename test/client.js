@@ -32,6 +32,7 @@ describe('Client', function() {
     })
   })
 
+
   describe('when client created', function() {
 
     it('should connect to the port I wanted', function() {
@@ -51,10 +52,43 @@ describe('Client', function() {
     })
   })
 
+  describe('#request', function() {
+
+    beforeEach(function() {
+      sinon.stub(client.protocol, 'serilize').returns('{}')
+    })
+
+    it('should try to send a serialized request', function() {
+      var dataToSendStub = {}
+      client.request('command', {})
+      client.protocol.serilize.args[0][0].arguments.should.eql(dataToSendStub)
+    })
+
+    it('should send the serilized data to socket', function() {
+      client.request('command', {})
+      connection.write.args[0][0].should.equal('{}');
+    })
+
+    it('should call the callback when have response', function() {
+      var callbackMock = sinon.stub()
+      client.request('command', {}, callbackMock)
+
+      connection.emit('data', new Buffer(JSON.stringify({
+        seq: 123,
+        request_seq: 1,
+        type: 'response',
+      })))
+
+      callbackMock.called.should.be.true
+    })
+
+  })
+
   describe('#version', function() {
     it('should send the request to debug server for version', function() {
 
       sinon.stub(client.protocol, 'version')
+      sinon.stub(client.protocol, 'serilize')
       client.version(function() {})
       client.protocol.version.calledWith(1).should.be.true
       connection.write.called.should.be.true
@@ -85,6 +119,14 @@ describe('Client', function() {
 
     })
 
+    it('should be not able to retrieve the correct version and call the err callback', function() {
+
+      client.version(cb)
+      connection.emit('data', new Buffer('{"seq":134,"request_seq":1,"type":"response","command":"version","success":false,"body":{"V8Version":"correct"},"refs":[],"running":false}', 'utf8'))
+      cb.args[0][0].should.be.a.Error;
+
+    })
+
     it('should retrieve the correct version when response includes the header', function() {
 
       client.version(cb)
@@ -98,7 +140,6 @@ describe('Client', function() {
         '{"seq":12,"request_seq":1,"type":"response","command":"version","success":true,"body":{"V8Version":"3.19.13"},"refs":[],"running":true}'
       ))
       cb.calledWith(null, '3.19.13').should.be.true
-
     })
   })
 
@@ -159,54 +200,4 @@ describe('Client', function() {
       cb.called.should.be.true
     })
   })
-
-  // TODO finish others then start with this
-  describe('#source', function() {
-
-    var protoStr = '{request_seq": 1}'
-      , sourceStub
-
-    beforeEach(function() {
-      sourceStub = sinon.stub(client.protocol, 'source')
-      sourceStub.returns(protoStr)
-    })
-
-    it('should get the source protocol once', function() {
-
-      client.source(1, 10, 20, function() {})
-      client.protocol.source.calledWith(1, 1, 10, 20).should.be.true
-
-    })
-
-    it('should get the source protocol twice', function() {
-
-      client.source(20, 10, 100, function() {})
-      client.source(400, 10, 10000, function() {})
-      client.protocol.source.calledWith(2, 400, 10, 10000).should.be.true
-
-    })
-
-    it('should send the source protocol string to debugger', function() {
-
-      client.source(function() {})
-      connection.write.calledWith(protoStr).should.be.true
-
-    })
-
-    it('should pass error to callback when no source', function(done) {
-
-      client.source(10, 10, 10, function(err) {
-        err.should.be.an.Error
-        done()
-      })
-
-      connection.emit('data', new Buffer(
-        '{"seq":6,"request_seq":1,"type":"response","command":"source","success":false,"message":"No source","running":true}',
-        'utf8'
-      ))
-    })
-
-  })
-
-
 })
