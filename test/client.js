@@ -76,7 +76,9 @@ describe('Client', function() {
       connection.emit('data', new Buffer(JSON.stringify({
         seq: 123,
         request_seq: 1,
+        command: 'scripts',
         type: 'response',
+        success: true
       })))
 
       callbackMock.called.should.be.true
