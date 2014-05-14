@@ -38,7 +38,7 @@ describe('ScriptManager', function() {
     it('should call the callback when request successful', function() {
       var cb = sinon.stub()
       manager.readScript(123, cb)
-      client.request.args[0][3](null, {})
+      client.request.args[0][2](null, {})
       cb.called.should.be.true
     })
   })
@@ -48,7 +48,7 @@ describe('ScriptManager', function() {
     it('should parse it to normal Script Object', function() {
       var cbMock = sinon.stub();
       var response = { type: 'scripts', body: [{ source: 'console.log("hello world");\n' }] }
-      client.request.callsArgWith(3, null, response)
+      client.request.callsArgWith(2, null, response)
       manager.readScript(123, cbMock)
       cbMock.args[0][1].should.eql(response.body[0].source)
     })

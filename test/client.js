@@ -60,7 +60,7 @@ describe('Client', function() {
 
     it('should try to send a serialized request', function() {
       var dataToSendStub = {}
-      client.request('command', {}, { noTrainsform: true })
+      client.request('command', {})
       client.protocol.serilize.args[0][0].arguments.should.eql(dataToSendStub)
     })
 
