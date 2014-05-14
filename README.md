@@ -60,6 +60,20 @@ client.on('break', function(breakInfo) {
 })
 ```
 
+Manage BreakPoints
+
+```js
+
+var BreakPointManger = Client.BreakPointManger;
+
+client.on('connect', function() {
+  var bm = new BreakPointManager(client);
+  bm.list(function(err, brks) {
+    // all break points are instance of BreakPoint
+  })
+});
+
+```
 Todo
 --------------------
 
