@@ -60,12 +60,12 @@ describe('Client', function() {
 
     it('should try to send a serialized request', function() {
       var dataToSendStub = {}
-      client.request('command', {})
+      client.request('command', {}, { noTrainsform: true })
       client.protocol.serilize.args[0][0].arguments.should.eql(dataToSendStub)
     })
 
     it('should send the serilized data to socket', function() {
-      client.request('command', {})
+      client.request('command', {}, {})
       connection.write.args[0][0].should.equal('{}');
     })
 
