@@ -50,7 +50,7 @@ describe('ScriptManager', function() {
       var response = { type: 'scripts', body: [{ source: 'console.log("hello world");\n' }] }
       client.request.callsArgWith(2, null, response)
       manager.readScript(123, cbMock)
-      cbMock.args[0][1].should.eql(response.body[0].source)
+      cbMock.args[0][1].source.should.eql(response.body[0].source)
     })
 
   })
