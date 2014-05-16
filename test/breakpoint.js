@@ -1,25 +1,39 @@
-var BreakPoint = require('./breakpoint'),
+var sinon = require('sinon'),
+    BreakPoint = require('../lib/breakpoint'),
     client = require('./client-stub')
 
 describe('BreakPoint', function() {
 
+  var breakpoint
+
   beforeEach(function() {
     client.respondWith({
-      breakpoints: [{
-        type: 'scriptId',
-        scriptId: 100,
-        number: 10,
-        line: 100,
-        column: 20,
-        groupId: 12,
-        hitCount: 0,
-        active: true,
-        ignoreCount: 1,
-        actualLocations: 234
-      }],
-      breakOnExceptions         : false,
-      breakOnUncaughtExceptions : false
     })
+
+    breakpoint = new BreakPoint({
+      type: 'scriptId',
+      scriptId: 100,
+      number: 10,
+      line: 100,
+      column: 20,
+      groupId: 12,
+      hitCount: 0,
+      active: true,
+      ignoreCount: 1,
+      actualLocations: 234
+    }, client)
+  })
+
+  it('should be able to clear itself', function () {
+    breakpoint.clear()
+    client.shouldRequestedWithCommand('clearbreakpoint');
+  })
+
+  it('should be able to clear itself using breakpoint number', function() {
+    breakpoint.clear()
+    client.shouldRequestedWithData({
+      breakpoint: 10
+    });
   })
 
 })

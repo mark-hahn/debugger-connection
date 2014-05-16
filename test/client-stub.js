@@ -39,6 +39,7 @@ client.respondWithError = function(someErr) {
 }
 
 client.shouldRequestedWithCommand = function(command) {
+  console.log(client.request.args[0][0])
   client.request.args[0][0].should.eql(command)
   client.request.restore()
 }
