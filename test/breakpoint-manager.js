@@ -119,4 +119,49 @@ describe('Break Point', function() {
     })
   })
 
+  describe('when try to create a new breakpoint', function() {
+    beforeEach(function() {
+      client.respondWith({
+        type: 'script',
+        breakpoint: 10
+      })
+    })
+
+    it('should be able to send the setbreakpoint request', function() {
+      breakpointManager
+        .createBreakpoint('name.js', 1, 'a == 1');
+
+      client.shouldRequestedWithCommand('setbreakpoint')
+    })
+
+    it('should be able to send a filename breakpoint', function() {
+      breakpointManager
+        .createBreakpoint('name.js', 1, 'a == 1');
+
+      client.shouldRequestedWithData({
+        type: 'script',
+        target: 'name.js',
+        line: 1,
+        column: 0,
+        enabled: true,
+        condition: 'a == 1',
+        ignoreCount: 0
+      })
+    })
+
+    it('should be able to generate a standard breakpoint', function() {
+      return breakpointManager
+        .createBreakpoint('name.js', 1, 'a == 1')
+        .then(function(breakpoint) {
+          breakpoint.name.should.equal('name.js')
+          breakpoint.line.should.equal(1)
+          breakpoint.condition.should.equal('a == 1')
+          breakpoint.enabled.should.equal(true)
+          breakpoint.number.should.equal(10)
+        });
+    })
+
+
+  })
+
 })

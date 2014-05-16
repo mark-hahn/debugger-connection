@@ -62,18 +62,42 @@ client.on('break', function(breakInfo) {
 
 Manage BreakPoints
 
+`list`
 ```js
 
 var BreakPointManger = Client.BreakPointManger;
 
 client.on('connect', function() {
   var bm = new BreakPointManager(client);
-  bm.list(function(err, brks) {
-    // all break points are instance of BreakPoint
-  })
+  bm.list()
+    .then(function(breakpoints) {
+      // all the brks
+    })
 });
-
 ```
+
+`clear one`
+```js
+bm.list()
+  .then(function(breakpoints) {
+    return breakpoints[0].clear()
+  })
+```
+
+`clear all`
+```js
+bm.clearAll()
+  .then(fn, errFn)
+```
+
+`create a new breakpoint`
+```js
+bm.createBreakpoint('script.js', 10, 'condition === true')
+  .then(function(breakpoint) {
+    breakpoint.should.be.instanceOf(BreakPoint) // :p
+  })
+```
+
 Todo
 --------------------
 
