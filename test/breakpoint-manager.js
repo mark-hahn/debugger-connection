@@ -73,7 +73,7 @@ describe('Break Point', function() {
   describe('when multiple breakpoints fetched from server', function() {
     beforeEach(function() {
       client.respondWith({
-        breakpoints: [{}, {}],
+        breakpoints: [{ type: 'scriptId' }, {}],
         breakOnExceptions         : false,
         breakOnUncaughtExceptions : false
       })
@@ -153,7 +153,7 @@ describe('Break Point', function() {
       return breakpointManager
         .createBreakpoint('name.js', 1, 'a == 1')
         .then(function(breakpoint) {
-          breakpoint.name.should.equal('name.js')
+          breakpoint.script.name.should.equal('name.js')
           breakpoint.line.should.equal(1)
           breakpoint.condition.should.equal('a == 1')
           breakpoint.enabled.should.equal(true)
