@@ -164,4 +164,13 @@ describe('Break Point', function() {
 
   })
 
+  describe('when client comes back a break event', function() {
+    it('should also emit a break event but with a standard breakpoint', function() {
+      var cb = sinon.stub()
+      breakpointManager.on('break', cb)
+      client.emit('break', {})
+      cb.called.should.be.true
+    })
+  })
+
 })
