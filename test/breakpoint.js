@@ -18,7 +18,6 @@ describe('BreakPoint', function() {
       column: 20,
       groupId: 12,
       hitCount: 0,
-      active: true,
       ignoreCount: 1,
       actualLocations: 234
     }, client)
@@ -34,6 +33,11 @@ describe('BreakPoint', function() {
     client.shouldRequestedWithData({
       breakpoint: 10
     });
+  })
+
+  it('should be able to active itself', function() {
+    breakpoint.active()
+    client.shouldRequestedWithCommand('changebreakpoint');
   })
 
 })
