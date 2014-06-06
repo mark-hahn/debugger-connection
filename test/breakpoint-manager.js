@@ -139,7 +139,7 @@ describe('Break Point', function() {
         .createBreakpoint('name.js', 1, 'a == 1');
 
       client.shouldRequestedWithData({
-        type: 'script',
+        type: 'scriptId',
         target: 'name.js',
         line: 1,
         column: 0,
@@ -150,6 +150,10 @@ describe('Break Point', function() {
     })
 
     it('should be able to generate a standard breakpoint', function() {
+      var readStub = sinon.stub(breakpointManager.scriptManager, 'readScript').returns(q({
+        name: 'name.js'
+      }))
+
       return breakpointManager
         .createBreakpoint('name.js', 1, 'a == 1')
         .then(function(breakpoint) {
@@ -158,7 +162,7 @@ describe('Break Point', function() {
           breakpoint.condition.should.equal('a == 1')
           breakpoint.enabled.should.equal(true)
           breakpoint.number.should.equal(10)
-        });
+        })
     })
 
 
