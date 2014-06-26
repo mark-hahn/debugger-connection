@@ -32,6 +32,18 @@ client.respondWith = function(something) {
   })
 }
 
+client.respondWithCollection = function(collection) {
+  stubMaker(client, function() {
+    var requestStub = sinon.stub(client, 'request')
+    collection.forEach(function(item, index) {
+      requestStub.onCall(index).callsArgWith(2, null, {
+        type: 'response',
+        body: item
+      })
+    })
+  })
+}
+
 client.respondWithError = function(someErr) {
   stubMaker(client, function() {
     sinon.stub(client, 'request').callsArgWith(2, someErr, null)
