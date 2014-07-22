@@ -21,17 +21,17 @@ describe('Client', function() {
     Client.__set__('net', {
       connect: connectionStub
     })
-    client = new Client(port)
+    client = Client.create().connect(5858)
+
     cb = sinon.stub()
   })
 
   describe('when using client as a normal function', function() {
     it('should create a new client instance', function() {
-      var client = Client(port)
+      var client = Client.create().connect(port);
       client.should.be.instanceOf(Client)
     })
   })
-
 
   describe('when client created', function() {
 
@@ -84,65 +84,23 @@ describe('Client', function() {
       callbackMock.called.should.be.true
     })
 
-  })
+    it('should send the request again when it\'s after 1 second without response', function(done) {
+      var callbackMock = sinon.stub()
+      client.request('command', {}, callbackMock)
 
-  describe('#version', function() {
-    it('should send the request to debug server for version', function() {
+      setTimeout(function() {
+        connection.emit('data', new Buffer(JSON.stringify({
+          seq: 123,
+          request_seq: 1,
+          command: 'scripts',
+          type: 'response',
+          success: true
+        })))
 
-      sinon.stub(client.protocol, 'version')
-      sinon.stub(client.protocol, 'serilize')
-      client.version(function() {})
-      client.protocol.version.calledWith(1).should.be.true
-      connection.write.called.should.be.true
-    })
-
-    it('should send the request to debug server for version twice', function() {
-      sinon.stub(client.protocol, 'version')
-      client.version(function() {})
-      client.version(function() {})
-
-      client.protocol.version.calledWith(2).should.be.true
-      connection.write.called.should.be.true
-    })
-
-    it('should be able to retrieve the version and call the callback', function() {
-
-      client.version(cb)
-      connection.emit('data', new Buffer('{"seq":134,"request_seq":1,"type":"response","command":"version","success":true,"body":{"V8Version":"1.3.19 (candidate)"},"refs":[],"running":false}', 'utf8'))
-      cb.calledWith(null, '1.3.19 (candidate)').should.be.true
-
-    })
-
-    it('should be able to retrieve the correct version and call the callback', function() {
-
-      client.version(cb)
-      connection.emit('data', new Buffer('{"seq":134,"request_seq":1,"type":"response","command":"version","success":true,"body":{"V8Version":"correct"},"refs":[],"running":false}', 'utf8'))
-      cb.calledWith(null, 'correct').should.be.true
-
-    })
-
-    it('should be not able to retrieve the correct version and call the err callback', function() {
-
-      client.version(cb)
-      connection.emit('data', new Buffer('{"seq":134,"request_seq":1,"type":"response","command":"version","success":false,"body":{"V8Version":"correct"},"refs":[],"running":false}', 'utf8'))
-      cb.args[0][0].should.be.a.Error;
-
-    })
-
-    it('should retrieve the correct version when response includes the header', function() {
-
-      client.version(cb)
-      connection.emit('data', new Buffer(
-        'Type: connect' +
-        'V8-Version: 3.19.13' +
-        'Protocol-Version: 1' +
-        'Embedding-Host: node v0.11.3' +
-        'Content-Length: 0' + '\r\n\r\n' +
-        'Content-Length: 135' + '\r\n\r\n' +
-        '{"seq":12,"request_seq":1,"type":"response","command":"version","success":true,"body":{"V8Version":"3.19.13"},"refs":[],"running":true}'
-      ))
-      cb.calledWith(null, '3.19.13').should.be.true
-    })
+        client.connection.write.callCount.should.equal(2);
+        done();
+      }, 1500);
+    });
   })
 
   describe('#continue', function() {

@@ -39,6 +39,5 @@ describe('Frame Manager', function() {
     })
 
     frameManager.pipe(writable)
-
   })
 })
