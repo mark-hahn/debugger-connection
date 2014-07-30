@@ -12,6 +12,7 @@ describe('Client', function() {
     , cb
     , port = 5858
     , connectionStub
+    , TIMEOUT
 
   beforeEach(function() {
     connection = new Ev()
@@ -21,6 +22,9 @@ describe('Client', function() {
     Client.__set__('net', {
       connect: connectionStub
     })
+
+    TIMEOUT = Client.__get__('TIMEOUT')
+
     client = Client.create().connect(5858)
 
     cb = sinon.stub()
@@ -56,16 +60,21 @@ describe('Client', function() {
 
     beforeEach(function() {
       sinon.stub(client.protocol, 'serilize').returns('{}')
+      Client.__set__('TIMEOUT', 10)
+    })
+
+    afterEach(function() {
+      Client.__set__('TIMEOUT', TIMEOUT)
     })
 
     it('should try to send a serialized request', function() {
       var dataToSendStub = {}
-      client.request('command', {})
+      client.request('command', {}, function() {})
       client.protocol.serilize.args[0][0].arguments.should.eql(dataToSendStub)
     })
 
     it('should send the serilized data to socket', function() {
-      client.request('command', {}, {})
+      client.request('command', {}, function() {})
       connection.write.args[0][0].should.equal('{}');
     })
 
@@ -99,8 +108,21 @@ describe('Client', function() {
 
         client.connection.write.callCount.should.equal(2);
         done();
-      }, 1500);
+      }, 15);
     });
+
+
+    it('should send the request 10 times if it doesn\'t have any response all these times', function(done) {
+      this.timeout(200)
+
+      client.request('command', {}, function() {})
+      setTimeout(function() {
+        client.connection.write.callCount.should.equal(10);
+        done();
+      }, 150);
+
+    })
+
   })
 
   describe('#continue', function() {
