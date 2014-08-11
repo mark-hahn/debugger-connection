@@ -2,7 +2,7 @@
   "name": "v8-debug-protocol",
   "version": "0.0.21",
   "description": "v8 protocol client",
-  "main": "index.js",
+  "main": "lib/client.js",
   "scripts": {
     "test": "istanbul cover node_modules/.bin/_mocha",
     "watch": "node_modules/.bin/_mocha --watch"
@@ -22,6 +22,7 @@
     "should": "^3.1.4",
     "mocha": "~1.21.4",
     "sinon": "^1.9.0",
-    "rewire": "^2.0.0"
+    "rewire": "^2.0.0",
+    "istanbul": "~0.3.0"
   }
 }
