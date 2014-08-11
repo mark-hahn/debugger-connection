@@ -125,56 +125,6 @@ describe('Client', function() {
 
   })
 
-  describe('#continue', function() {
-
-    var protocol;
-
-    beforeEach(function() {
-      protocol = client.protocol
-      sinon.stub(protocol, 'continue')
-    })
-
-    afterEach(function() {
-      protocol.continue.restore()
-    })
-
-    it('should send a normal continue request to debugger', function() {
-      client.continue()
-      protocol.continue.called.should.be.true
-    })
-
-    it('should send a out continue request with step to debugger', function() {
-      client.continue.out(10)
-      protocol.continue.calledWith(1, 'out', 10).should.be.true
-    })
-
-    it('should send a next continue request to debugger', function() {
-      client.continue.next()
-      protocol.continue.calledWith(1, 'next').should.be.true
-    })
-
-    it('should provide the success result to handler', function() {
-      client.continue(cb)
-      connection.emit('data',
-        JSON.stringify({
-          seq         : 1,
-          type        : 'response',
-          request_seq : 1,
-          command     : 'continue',
-          running     : true,
-          success     : true
-        })
-      )
-
-      cb.called.should.be.true
-    })
-
-    it('should send the in next step without step', function() {
-      client.continue.next(cb)
-      protocol.continue.calledWith(1, 'next').should.be.true
-    })
-  })
-
   describe('#break event', function() {
     it('should publish a break event data came', function() {
       client.on('break', cb)
