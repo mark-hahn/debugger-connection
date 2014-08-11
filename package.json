@@ -1,8 +1,8 @@
 {
-  "name": "v8-debug-protocol",
-  "version": "0.0.21",
+  "name": "debugger-connection",
+  "version": "0.0.1",
   "description": "v8 protocol client",
-  "main": "lib/client.js",
+  "main": "lib/connection.js",
   "scripts": {
     "test": "istanbul cover node_modules/.bin/_mocha",
     "watch": "node_modules/.bin/_mocha --watch"

@@ -2,7 +2,7 @@
 var sinon = require('sinon')
   , rewire = require('rewire')
   , Ev = require('events').EventEmitter
-  , Client = rewire('../lib/client')
+  , Client = rewire('../lib/connection')
   , noop = function() {}
 
 describe('Client', function() {
