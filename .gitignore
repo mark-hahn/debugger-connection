@@ -2,3 +2,5 @@ node_modules*
 coverage
 .idea
 .DS_Store
+npm-debug.log
+output.md

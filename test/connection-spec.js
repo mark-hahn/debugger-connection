@@ -1,135 +1,115 @@
-
 var sinon = require('sinon')
   , rewire = require('rewire')
+  , q = require('q')
+  , _ = require('lodash')
   , Ev = require('events').EventEmitter
-  , Client = rewire('../lib/connection')
+  , client = rewire('../lib/connection')
   , noop = function() {}
 
-describe('Client', function() {
+
+function timeout(msec) {
+  return q.Promise(function(resolve) {
+    setTimeout(function() {
+      resolve(true);
+    }, msec);
+  })
+}
+
+describe('client', function() {
 
   var connection
-    , client
     , cb
     , port = 5858
     , connectionStub
     , TIMEOUT
+    , net = client.__get__('net');
 
-  beforeEach(function() {
-    connection = new Ev()
-    connection.write = sinon.stub()
-    connectionStub = sinon.stub()
-    connectionStub.returns(connection)
-    Client.__set__('net', {
-      connect: connectionStub
-    })
+  beforeEach(function setup() {
+    connection = new Ev();
 
-    TIMEOUT = Client.__get__('TIMEOUT')
+    connection.write = sinon.stub();
 
-    client = Client.create().connect(5858)
+    sinon.stub(net, 'connect').returns(connection);
+  });
 
-    cb = sinon.stub()
-  })
+  afterEach(function tearDown() {
+    net.connect.restore();
+    client.connection = null;
+    client._connected = false;
+  });
 
-  describe('when using client as a normal function', function() {
-    it('should create a new client instance', function() {
-      var client = Client.create().connect(port);
-      client.should.be.instanceOf(Client)
-    })
-  })
+  it('should be able to connect to port', function() {
+    client.connect(5858);
+    net.connect.calledWith({ port: 5858 }).should.be.true;
+  });
 
-  describe('when client created', function() {
+  it('should be able return the connection when connected', function() {
+    var promise = client
+      .connect(5858)
+      .then(function(c) {
+        c.should.equal(client)
+      });
 
-    it('should connect to the port I wanted', function() {
-      connectionStub.calledWith({ port: 5858 }).should.be.true
-    })
+    connection.emit('connect');
+    return promise;
+  });
 
-    it('should emit connect event when client is already access to debugger', function() {
-      client.on('connect', cb)
-      client.connection.emit('connect')
-      cb.called.should.be.true
-    })
+  it('should be able to disconnect with the server', function() {
 
-    it('should emit error when connection have error', function() {
-      client.on('error', cb)
-      client.connection.emit('error', 'this is an error')
-      cb.calledWith('this is an error').should.be.true
-    })
-  })
+    sinon.stub(client, 'request').callsArgWith(2, null, true);
 
-  describe('#request', function() {
+    var promise = client
+      .connect(5858)
+      .then(function(client) {
+        return client.disconnect();
+      })
+      .then(function() {
+        client.request.called.should.be.true;
+        client.request.calledWith('disconnect', {}).should.be.true;
+        client.request.restore();
+      });
 
-    beforeEach(function() {
-      sinon.stub(client.protocol, 'serilize').returns('{}')
-      Client.__set__('TIMEOUT', 10)
-    })
+    connection.emit('connect')
 
-    afterEach(function() {
-      Client.__set__('TIMEOUT', TIMEOUT)
-    })
+    return promise;
+  });
 
-    it('should try to send a serialized request', function() {
-      var dataToSendStub = {}
-      client.request('command', {}, function() {})
-      client.protocol.serilize.args[0][0].arguments.should.eql(dataToSendStub)
-    })
+  it('should be able to send the request to the server', function() {
 
-    it('should send the serilized data to socket', function() {
-      client.request('command', {}, function() {})
-      connection.write.args[0][0].should.equal('{}');
-    })
+    var promise = client
+      .connect(5858)
+      .then(function() {
+        client.request('command', {}, function() {});
+        _.forEach(client._fnPool, function(fn) {
+          fn.call();
+        });
+        connection.write.args[0][0].should.match(/command/);
+        connection.write.args[0][0].should.match(/{}/);
+      });
 
-    it('should call the callback when have response', function() {
-      var callbackMock = sinon.stub()
-      client.request('command', {}, callbackMock)
+    connection.emit('connect');
 
-      connection.emit('data', new Buffer(JSON.stringify({
-        seq: 123,
-        request_seq: 1,
-        command: 'scripts',
-        type: 'response',
-        success: true
-      })))
+    return promise;
+  });
 
-      callbackMock.called.should.be.true
-    })
+  it('should be able to try many times when no result', function() {
 
-    it('should send the request again when it\'s after 1 second without response', function(done) {
-      var callbackMock = sinon.stub()
-      client.request('command', {}, callbackMock)
+    client.__set__('TIMEOUT', 10);
 
-      setTimeout(function() {
-        connection.emit('data', new Buffer(JSON.stringify({
-          seq: 123,
-          request_seq: 1,
-          command: 'scripts',
-          type: 'response',
-          success: true
-        })))
+    var promise = client
+      .connect(5858)
+      .then(function() {
+        client.request('command', {}, function() {});
+        return timeout(50);
+      })
+      .then(function() {
+        _.forEach(client._fnPool, function(fn) {
+          fn.call();
+        });
+        connection.write.callCount.should.greaterThan(1)
+      });
 
-        client.connection.write.callCount.should.equal(2);
-        done();
-      }, 15);
-    });
-
-
-    it('should send the request 10 times if it doesn\'t have any response all these times', function(done) {
-      this.timeout(200)
-
-      client.request('command', {}, function() {})
-      setTimeout(function() {
-        client.connection.write.callCount.should.equal(10);
-        done();
-      }, 150);
-
-    })
-
-  })
-
-  describe('#break event', function() {
-    it('should publish a break event data came', function() {
-      client.on('break', cb)
-      connection.emit('data', '{"seq":1,"type":"event","event":"break"}')
-      cb.called.should.be.true
-    })
-  })
-})
+    connection.emit('connect');
+    return promise;
+  });
+});

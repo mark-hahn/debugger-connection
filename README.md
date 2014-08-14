@@ -18,15 +18,6 @@ connection
   });
 ```
 
-`#getConnection`
-```js
-connection
-  .getConnection()
-  .then(function() {
-
-  })
-```
-
 `#request`
 
 ```js
