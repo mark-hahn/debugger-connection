@@ -112,4 +112,20 @@ describe('client', function() {
     connection.emit('connect');
     return promise;
   });
+
+  it('should not connect again when using same port and connected', function() {
+
+    var promise = client
+      .connect(5858)
+      .then(function() {
+        return client.connect(5858);
+      })
+      .then(function() {
+        net.connect.callCount.should.equal(1);
+      })
+
+    connection.emit('connect');
+
+    return promise;
+  });
 });
