@@ -3,8 +3,9 @@ var sinon = require('sinon')
   , q = require('q')
   , _ = require('lodash')
   , Ev = require('events').EventEmitter
-  , client = rewire('../lib/connection')
+  , Connection = rewire('../lib/connection')
   , noop = function() {}
+  , client = new Connection();
 
 
 function timeout(msec) {
@@ -15,26 +16,26 @@ function timeout(msec) {
   })
 }
 
-describe('client', function() {
+describe('Connection', function() {
 
-  var connection
+  var socket
     , cb
     , port = 5858
     , connectionStub
     , TIMEOUT
-    , net = client.__get__('net');
+    , net = Connection.__get__('net');
 
   beforeEach(function setup() {
-    connection = new Ev();
+    socket = new Ev();
 
-    connection.write = sinon.stub();
+    socket.write = sinon.stub();
 
-    sinon.stub(net, 'connect').returns(connection);
+    sinon.stub(net, 'connect').returns(socket);
   });
 
   afterEach(function tearDown() {
     net.connect.restore();
-    client.connection = null;
+    client.socket = null;
     client._connected = false;
   });
 
@@ -43,14 +44,14 @@ describe('client', function() {
     net.connect.calledWith({ port: 5858 }).should.be.true;
   });
 
-  it('should be able return the connection when connected', function() {
+  it('should be able return the socket when connected', function() {
     var promise = client
       .connect(5858)
       .then(function(c) {
         c.should.equal(client)
       });
 
-    connection.emit('connect');
+    socket.emit('connect');
     return promise;
   });
 
@@ -69,7 +70,7 @@ describe('client', function() {
         client.request.restore();
       });
 
-    connection.emit('connect')
+    socket.emit('connect')
 
     return promise;
   });
@@ -83,18 +84,18 @@ describe('client', function() {
         _.forEach(client._fnPool, function(fn) {
           fn.call();
         });
-        connection.write.args[0][0].should.match(/command/);
-        connection.write.args[0][0].should.match(/{}/);
+        socket.write.args[0][0].should.match(/command/);
+        socket.write.args[0][0].should.match(/{}/);
       });
 
-    connection.emit('connect');
+    socket.emit('connect');
 
     return promise;
   });
 
   it('should be able to try many times when no result', function() {
 
-    client.__set__('TIMEOUT', 10);
+    Connection.__set__('TIMEOUT', 10);
 
     var promise = client
       .connect(5858)
@@ -106,10 +107,10 @@ describe('client', function() {
         _.forEach(client._fnPool, function(fn) {
           fn.call();
         });
-        connection.write.callCount.should.greaterThan(1)
+        socket.write.callCount.should.greaterThan(1)
       });
 
-    connection.emit('connect');
+    socket.emit('connect');
     return promise;
   });
 
@@ -124,7 +125,7 @@ describe('client', function() {
         net.connect.callCount.should.equal(1);
       })
 
-    connection.emit('connect');
+    socket.emit('connect');
 
     return promise;
   });
