@@ -5,7 +5,7 @@ var sinon = require('sinon')
   , Ev = require('events').EventEmitter
   , Connection = rewire('../lib/connection')
   , noop = function() {}
-  , client = new Connection();
+  , client = new Connection(new Ev());
 
 
 function timeout(msec) {
