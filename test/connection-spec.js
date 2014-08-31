@@ -81,8 +81,13 @@ describe('Connection', function() {
       .connect(5858)
       .then(function() {
         client.request('command', {}, function() {});
-        _.forEach(client._fnPool, function(fn) {
-          fn.call();
+        _.forEach(client._fnPool, function(req) {
+          socket.emit('data', JSON.stringify({
+            type: 'response',
+            request_seq: req.seq,
+            body: {},
+            success: true
+          }));
         });
         socket.write.args[0][0].should.match(/command/);
         socket.write.args[0][0].should.match(/{}/);
@@ -104,8 +109,13 @@ describe('Connection', function() {
         return timeout(50);
       })
       .then(function() {
-        _.forEach(client._fnPool, function(fn) {
-          fn.call();
+        _.forEach(client._fnPool, function(req) {
+          socket.emit('data', JSON.stringify({
+            type: 'response',
+            request_seq: req.seq,
+            body: {},
+            success: true
+          }));
         });
         socket.write.callCount.should.greaterThan(1)
       });
